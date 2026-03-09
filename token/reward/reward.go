@@ -8,6 +8,7 @@ type Distribution struct {
 	Proposer         uint64
 	PerParticipant   uint64
 	ParticipantCount int
+	BurnedRemainder  uint64
 }
 
 // Manager coordinates reward minting and distribution on top of the ACL ledger.
@@ -78,9 +79,10 @@ func (m *Manager) DistributeReservedReward(reward uint64, proposer string, parti
 		return distribution
 	}
 
+	distribution.Proposer = reward * 60 / 100
 	participantPool := reward * 40 / 100
 	distribution.PerParticipant = participantPool / uint64(len(participants))
-	distribution.Proposer = reward - (distribution.PerParticipant * uint64(len(participants)))
+	distribution.BurnedRemainder = reward - distribution.Proposer - (distribution.PerParticipant * uint64(len(participants)))
 	m.Ledger.DistributeReward(reward, proposer, participants)
 	return distribution
 }

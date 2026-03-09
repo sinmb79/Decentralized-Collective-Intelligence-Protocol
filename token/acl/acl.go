@@ -7,9 +7,9 @@ import (
 )
 
 const (
-	TotalSupply     uint64  = 2_100_000_000_000_000
-	InitialReward   uint64  = 5_000_000_000
-	HalvingInterval uint64  = 210_000
+	TotalSupply     uint64  = 2_100_000_000 * 100_000_000
+	InitialReward   uint64  = 84 * 100_000_000
+	HalvingInterval uint64  = 12_614_400
 	FeesBurnRatio   float64 = 0.5
 	RateLimit       int     = 100
 	RateFee         uint64  = 10_000
@@ -141,15 +141,17 @@ func (l *Ledger) DistributeReward(reward uint64, proposer string, participants [
 		return
 	}
 
+	proposerShare := reward * 60 / 100
 	participantPool := reward * 40 / 100
 	perParticipant := participantPool / uint64(len(participants))
-	proposerShare := reward - (perParticipant * uint64(len(participants)))
+	remainder := reward - proposerShare - (perParticipant * uint64(len(participants)))
 
 	l.Balances[proposer] += proposerShare
 	for _, participant := range participants {
 		l.Balances[participant] += perParticipant
 	}
 
+	l.Burned += remainder
 	l.rewardPool -= reward
 }
 
