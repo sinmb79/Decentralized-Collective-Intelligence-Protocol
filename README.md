@@ -70,11 +70,14 @@ Normal users experience the network as **free**. Spam bots face economic barrier
 
 | Property | Value |
 |----------|-------|
-| Total Supply | 21,000,000 ACL (fixed) |
+| Total Supply | 2,100,000,000 ACL (fixed) |
+| Decimals | 8 (smallest unit: 1 satoshi = 10^-8 ACL) |
 | Consensus | Proof of Inference (PoI) |
-| Block Reward | 50 ACL (halves every 210,000 blocks) |
+| Block Reward | 84 ACL (halves every 12,614,400 blocks, about 4 years) |
+| Block Time | ~10 seconds |
 | Node Selection | ECVRF (verifiable random, manipulation-proof) |
 | Fee Burn | 50% of transaction fees burned |
+| Pre-mine | 0 (Fair Launch) |
 
 **Four reward streams for nodes:**
 1. Block rewards (always — baseline income)

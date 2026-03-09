@@ -2,6 +2,18 @@ package acl
 
 import "testing"
 
+func TestWorldlandTokenomicsConstants(t *testing.T) {
+	if TotalSupply != 2_100_000_000*100_000_000 {
+		t.Fatalf("TotalSupply = %d, want %d", TotalSupply, uint64(2_100_000_000*100_000_000))
+	}
+	if InitialReward != 84*100_000_000 {
+		t.Fatalf("InitialReward = %d, want %d", InitialReward, uint64(84*100_000_000))
+	}
+	if HalvingInterval != 12_614_400 {
+		t.Fatalf("HalvingInterval = %d, want %d", HalvingInterval, uint64(12_614_400))
+	}
+}
+
 func TestBalanceReturnsZeroForUnknownAddress(t *testing.T) {
 	var ledger Ledger
 
@@ -103,6 +115,33 @@ func TestDistributeRewardSplitsProposerAndParticipants(t *testing.T) {
 	}
 	if ledger.Balance("p1") != 20 || ledger.Balance("p2") != 20 {
 		t.Fatalf("participant balances = %d/%d, want 20/20", ledger.Balance("p1"), ledger.Balance("p2"))
+	}
+	if ledger.rewardPool != 0 {
+		t.Fatalf("rewardPool = %d, want 0", ledger.rewardPool)
+	}
+}
+
+func TestDistributeRewardBurnsRemainder(t *testing.T) {
+	ledger := &Ledger{
+		Balances: map[string]uint64{
+			"proposer": 0,
+			"p1":       0,
+			"p2":       0,
+			"p3":       0,
+		},
+		rewardPool: 101,
+	}
+
+	ledger.DistributeReward(101, "proposer", []string{"p1", "p2", "p3"})
+
+	if ledger.Balance("proposer") != 60 {
+		t.Fatalf("proposer balance = %d, want 60", ledger.Balance("proposer"))
+	}
+	if ledger.Balance("p1") != 13 || ledger.Balance("p2") != 13 || ledger.Balance("p3") != 13 {
+		t.Fatalf("participant balances = %d/%d/%d, want 13/13/13", ledger.Balance("p1"), ledger.Balance("p2"), ledger.Balance("p3"))
+	}
+	if ledger.Burned != 2 {
+		t.Fatalf("Burned = %d, want 2", ledger.Burned)
 	}
 	if ledger.rewardPool != 0 {
 		t.Fatalf("rewardPool = %d, want 0", ledger.rewardPool)

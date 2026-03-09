@@ -45,6 +45,8 @@ func FromIdentity(id *identity.Identity) (*VRF, error) {
 }
 
 // Prove returns a deterministic output and proof for a given input.
+// NOTE: Phase 1 approximation using Ed25519 signatures as a VRF substitute.
+// Replace with a RFC 9381-compliant ECVRF implementation in Phase 3.
 func (v *VRF) Prove(input []byte) ([]byte, []byte, error) {
 	if v == nil || len(v.PrivKey) != ed25519.PrivateKeySize || len(v.PubKey) != ed25519.PublicKeySize {
 		return nil, nil, ErrInvalidPrivateKey
