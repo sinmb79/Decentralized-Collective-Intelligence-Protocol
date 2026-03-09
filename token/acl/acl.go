@@ -30,6 +30,14 @@ type Ledger struct {
 	mutex      sync.RWMutex
 }
 
+// Snapshot captures ledger state for persistence or rollback.
+type Snapshot struct {
+	Balances   map[string]uint64
+	Burned     uint64
+	Minted     uint64
+	RewardPool uint64
+}
+
 // Balance returns the current balance for an address.
 func (l *Ledger) Balance(addr string) uint64 {
 	l.mutex.RLock()
@@ -40,6 +48,14 @@ func (l *Ledger) Balance(addr string) uint64 {
 	}
 
 	return l.Balances[addr]
+}
+
+// RewardPool returns the currently reserved reward pool.
+func (l *Ledger) RewardPool() uint64 {
+	l.mutex.RLock()
+	defer l.mutex.RUnlock()
+
+	return l.rewardPool
 }
 
 // Transfer moves ACL from one address to another and splits the fee.
@@ -157,6 +173,38 @@ func (l *Ledger) Burn(addr string, amount uint64) error {
 	l.Balances[addr] -= amount
 	l.Burned += amount
 	return nil
+}
+
+// Snapshot returns a deep copy of the current ledger state.
+func (l *Ledger) Snapshot() Snapshot {
+	l.mutex.RLock()
+	defer l.mutex.RUnlock()
+
+	balances := make(map[string]uint64, len(l.Balances))
+	for addr, balance := range l.Balances {
+		balances[addr] = balance
+	}
+
+	return Snapshot{
+		Balances:   balances,
+		Burned:     l.Burned,
+		Minted:     l.Minted,
+		RewardPool: l.rewardPool,
+	}
+}
+
+// Restore replaces the ledger state with a persisted snapshot.
+func (l *Ledger) Restore(snapshot Snapshot) {
+	l.mutex.Lock()
+	defer l.mutex.Unlock()
+
+	l.Balances = make(map[string]uint64, len(snapshot.Balances))
+	for addr, balance := range snapshot.Balances {
+		l.Balances[addr] = balance
+	}
+	l.Burned = snapshot.Burned
+	l.Minted = snapshot.Minted
+	l.rewardPool = snapshot.RewardPool
 }
 
 func (l *Ledger) ensureState() {
